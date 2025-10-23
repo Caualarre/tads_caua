@@ -1,20 +1,34 @@
 package br.edu.ifsul.cstsi.tads_aulas.autenticacao;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import br.edu.ifsul.cstsi.tads_aulas.usuario.Usuario;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service //indica que essa classe deve ser adicionada ao Contexto do aplicativo como um Bean da camada de serviço de dados
-public class AutenticacaoService implements UserDetailsService {
-    private final AutenticacaoRepository rep;
+@Service
+public class AutenticacaoService {
 
-    public AutenticacaoService(AutenticacaoRepository rep) {
+    private final AutenticacaoRepository rep;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public AutenticacaoService(AutenticacaoRepository rep, BCryptPasswordEncoder passwordEncoder) {
         this.rep = rep;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return rep.findByEmail(username);
+    // Autentica um usuário com base no email e senha
+    public Usuario autenticar(String email, String senha) {
+        // Encontra o usuário pelo e-mail
+        Usuario usuario = rep.findByEmail(email);
+
+        if (usuario == null) {
+            throw new IllegalArgumentException("Usuário não encontrado com o e-mail: " + email);
+        }
+
+        // Verifica se a senha fornecida é válida comparando com a senha criptografada
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            throw new IllegalArgumentException("Senha inválida");
+        }
+
+        return usuario; // Retorna o usuário autenticado
     }
 }
