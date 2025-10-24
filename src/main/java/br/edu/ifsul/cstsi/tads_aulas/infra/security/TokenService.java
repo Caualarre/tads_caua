@@ -12,37 +12,46 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 
-@Service //indica que essa classe deve ser adicionada ao Contexto do aplicativo como um Bean da camada de serviço de segurança JWT
+@Service
 public class TokenService {
 
-    @Value(value = "${api.security.token.secret}") //vem de application.properties, em api.security.token.secret
+    @Value("${api.security.token.secret}")
     private String secret;
 
-    public String geraToken(Usuario usuario){
+    @Value("${api.security.token.expirationHours:2}") // valor padrão de 2 horas
+    private long tokenExpirationHours;
+
+    // Gera o token JWT para o usuário
+    public String geraToken(Usuario usuario) {
         try {
+            // Usando o algoritmo HMAC com a chave secreta
             var algorithm = Algorithm.HMAC256(secret);
+
+            // Gerando o token JWT
             return JWT.create()
-                .withIssuer("API Produtos Exemplo de TADS")
-                .withSubject(usuario.getUsername())
-                .withIssuedAt(Instant.now()) //gerado em
-                .withExpiresAt(Instant.now().plus(Duration.ofHours(2))) //expira em
-                .sign(algorithm);
-        } catch (JWTCreationException exception){
-            // Invalid Signing configuration / Couldn't convert Claims.
+                    .withIssuer("API Produtos Exemplo de TADS") // Emitido por
+                    .withSubject(usuario.getEmail()) // Usando o email como subject
+                    .withIssuedAt(Instant.now()) // Data de emissão do token
+                    .withExpiresAt(Instant.now().plus(Duration.ofHours(tokenExpirationHours))) // Definindo tempo de expiração
+                    .sign(algorithm); // Assinando o token
+        } catch (JWTCreationException exception) {
+            // Em caso de erro ao criar o token
             throw new RuntimeException("Erro ao gerar o token JWT.", exception);
         }
     }
 
-    public String getSubject(String tokenJWT){
+    // Recupera o subject (e-mail do usuário) do token
+    public String getSubject(String tokenJWT) {
         try {
+            // Verificando e validando o token JWT
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
-                .withIssuer("API Produtos Exemplo de TADS")
-                .build()
-                .verify(tokenJWT)
-                .getSubject();
-        } catch (JWTVerificationException exception){
-            // Invalid signature/claims
+                    .withIssuer("API Produtos Exemplo de TADS") // Verificando o issuer
+                    .build()
+                    .verify(tokenJWT) // Validando o token
+                    .getSubject(); // Retorna o subject (e-mail do usuário)
+        } catch (JWTVerificationException exception) {
+            // Se o token for inválido ou expirado
             throw new TokenInvalidoException("Token JWT inválido ou expirado.");
         }
     }

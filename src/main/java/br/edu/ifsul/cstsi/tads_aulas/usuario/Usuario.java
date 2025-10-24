@@ -6,12 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;  // Importa a classe SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;  // Importa Collectors
 
 @Entity(name = "Usuario")
 @Table(name = "usuarios")
@@ -23,6 +25,21 @@ public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToMany
+    @JoinTable(
+            name = "usuario_vtuber_favoritos",
+            joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "vtuber_uid", referencedColumnName = "uid")
+    )
+    private List<Vtuber> favoritos;
+
+    @ManyToMany
+    @JoinTable(
+            name = "usuario_perfil",
+            joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "perfil_id", referencedColumnName = "id")
+    )
+    private List<Perfil> perfis;  // Alterado de 'favoritos' para 'perfis'
 
     private String nome;
     private String sobrenome;
@@ -34,25 +51,13 @@ public class Usuario implements UserDetails {
 
     private boolean isConfirmado = false;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuarios_perfis",
-            joinColumns = @JoinColumn(name = "usuarios_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "perfis_id", referencedColumnName = "id"))
-    private List<Perfil> perfis;
-
-    // O campo "favoritos" em Usuario, que agora estará presente para o mapeamento inverso de Vtuber
-    @ManyToMany
-    @JoinTable(
-            name = "usuario_vtuber_favoritos",
-            joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "vtuber_uid", referencedColumnName = "uid")
-    )
-    private List<Vtuber> favoritos;
-
-    // Métodos implementados da interface UserDetails
+    // Método getAuthorities agora usa os Perfis associados
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return perfis;
+        // Retorna as permissões dos perfis associados ao usuário, agora com SimpleGrantedAuthority
+        return perfis.stream()
+                .map(perfil -> new SimpleGrantedAuthority(perfil.getAuthority())) // Usa SimpleGrantedAuthority
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -97,5 +102,3 @@ public class Usuario implements UserDetails {
         return encoder.matches(senha, this.senha);
     }
 }
-
-

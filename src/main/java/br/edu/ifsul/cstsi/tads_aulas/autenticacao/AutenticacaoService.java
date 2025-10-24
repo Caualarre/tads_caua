@@ -32,3 +32,4 @@ public class AutenticacaoService {
         return usuario; // Retorna o usuário autenticado
     }
 }
+

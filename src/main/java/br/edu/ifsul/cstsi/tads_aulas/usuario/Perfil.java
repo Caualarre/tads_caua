@@ -7,13 +7,13 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.List;
-
 @Entity(name = "Perfil")
 @Table(name = "perfis")
 @NoArgsConstructor
 @Getter
 @Setter
 public class Perfil implements GrantedAuthority {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -24,6 +24,6 @@ public class Perfil implements GrantedAuthority {
 
     @Override
     public String getAuthority() {
-        return nome;
+        return nome;  // O nome do perfil é retornado como a autoridade
     }
 }

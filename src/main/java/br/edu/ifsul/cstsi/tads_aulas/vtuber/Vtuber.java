@@ -23,6 +23,7 @@ public class Vtuber {
     @JoinColumn(name = "empresaId", nullable = false, foreignKey = @ForeignKey(name = "fk_vtuber_empresa"))
     private Empresa empresa;
 
+
     private String nome;
     private String urlFoto;
 
@@ -44,4 +45,5 @@ public class Vtuber {
     // Corrigir o mapeamento para apontar para o campo correto "favoritos"
     @ManyToMany(mappedBy = "favoritos", fetch = FetchType.LAZY)
     private List<Usuario> favoritedBy = new ArrayList<>();
+
 }
