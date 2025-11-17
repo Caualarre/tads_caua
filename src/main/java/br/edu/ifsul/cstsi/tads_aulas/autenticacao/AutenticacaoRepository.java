@@ -5,6 +5,6 @@ import org.springframework.data.repository.Repository;
 import org.springframework.security.core.userdetails.UserDetails; // ⬅️ Nova importação
 
 
-public interface AutenticacaoRepository extends Repository<Usuario, Long> {
+public interface AutenticacaoRepository extends Repository<Usuario, String> {
     UserDetails findByEmail(String email);
 }

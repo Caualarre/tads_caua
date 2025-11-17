@@ -1,147 +1,54 @@
 -- ==========================================
--- 1. 🔄 LIMPEZA E RECRIAÇÃO DO BANCO (Obrigatório)
--- Isso resolve todos os problemas de chaves estrangeiras pendentes.
--- ==========================================
-DROP DATABASE IF EXISTS vcore;
-CREATE DATABASE vcore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE vcore;
-
--- ==========================================
--- 2. 🧱 DDL: CRIAÇÃO DE TABELAS (Padronizadas com JPA: PLURAL)
+-- data.sql - DML (Data Manipulation Language)
+-- AJUSTADO PARA PKs DO TIPO STRING ('uid')
 -- ==========================================
 
--- Tabela: perfis
-CREATE TABLE perfis (
-                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        nome VARCHAR(100) NOT NULL UNIQUE
-);
+-- 1. INSERINDO PERFIS (Tabela: perfis)
+-- PK: uid (String)
+INSERT INTO perfis (uid, nome) VALUES ('ROLE_ADMIN', 'ROLE_ADMIN');
+INSERT INTO perfis (uid, nome) VALUES ('ROLE_USER', 'ROLE_USER');
 
--- Tabela: usuarios (inclui coluna dtype para herança)
-CREATE TABLE usuarios (
-                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                          dtype VARCHAR(50),
-                          nome VARCHAR(100) NOT NULL,
-                          sobrenome VARCHAR(100),
-                          email VARCHAR(150) NOT NULL UNIQUE,
-                          senha VARCHAR(255) NOT NULL,
-                          is_confirmado BOOLEAN DEFAULT FALSE
-);
+-- 2. INSERINDO USUÁRIOS (Tabela: usuarios)
+-- PK: uid (String) - usando IDs de string explícitas
+-- Senha para ambos: "123456" codificada em BCrypt.
+INSERT INTO usuarios (uid, dtype, nome, sobrenome, email, senha, is_confirmado)
+VALUES ('admin001', 'Usuario', 'Admin', 'do Sistema', 'admin@email.com', '$2a$10$kmzjw/pyVvv8jYi0V6WMA.Edq4enmP2s/0IOfixpj2blv2GFLp0oa', true);
 
--- Tabela: empresas
-CREATE TABLE empresas (
-                          uid VARCHAR(255) PRIMARY KEY,
-                          nome VARCHAR(150) NOT NULL,
-                          url_foto VARCHAR(500),
-                          info TEXT
-);
+INSERT INTO usuarios (uid, dtype, nome, sobrenome, email, senha, is_confirmado)
+VALUES ('user001', 'Usuario', 'Usuario', 'do Sistema', 'user@email.com', '$2a$10$kmzjw/pyVvv8jYi0V6WMA.Edq4enmP2s/0IOfixpj2blv2GFLp0oa', true);
 
--- Tabela: vtubers (Plural, como na Entidade Java)
-CREATE TABLE vtubers (
-                         uid VARCHAR(255) PRIMARY KEY,
-                         nome VARCHAR(150) NOT NULL,
-                         url_foto VARCHAR(500),
-                         info TEXT,
-                         link_canal VARCHAR(255),
-                         video_youtube VARCHAR(255),
-                         media_notas FLOAT(23),
-                         total_avaliacoes INTEGER,
-                         soma_total_das_notas FLOAT(23),
-                         empresa_id VARCHAR(255) NOT NULL
-);
-
--- Tabela: notas
-CREATE TABLE notas (
-                       uid VARCHAR(255) PRIMARY KEY,
-                       vtuber_id VARCHAR(255) NOT NULL,
-                       valor INT CHECK (valor BETWEEN 0 AND 5),
-                       comentario TEXT,
-                       data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-                       data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Tabela Associativa: usuario_perfil (N:N)
-CREATE TABLE usuario_perfil (
-                                usuario_id BIGINT NOT NULL,
-                                perfil_id BIGINT NOT NULL,
-                                PRIMARY KEY (usuario_id, perfil_id)
-);
-
--- Tabela Associativa: usuario_vtuber_favoritos (ElementCollection de String na entidade Usuario)
-CREATE TABLE usuario_vtuber_favoritos (
-                                          usuario_id BIGINT NOT NULL,
-                                          vtuber_uid VARCHAR(255)
-);
-
--- Tabela: produtos (exemplo)
-CREATE TABLE produtos (
-                          id BIGINT NOT NULL AUTO_INCREMENT,
-                          descricao VARCHAR(255),
-                          estoque INTEGER,
-                          nome VARCHAR(255),
-                          situacao BIT,
-                          valor_de_compra DECIMAL(38,2),
-                          valor_de_venda DECIMAL(38,2),
-                          PRIMARY KEY (id)
-);
-
--- ==========================================
--- 3. 🔗 DDL: CHAVES ESTRANGEIRAS
--- ==========================================
-
--- Chaves Estrangeiras para Tabela notas
-ALTER TABLE notas
-    ADD CONSTRAINT fk_nota_vtuber FOREIGN KEY (vtuber_id)
-        REFERENCES vtubers(uid) ON DELETE CASCADE;
-
--- Chaves Estrangeiras para Tabela vtubers
-ALTER TABLE vtubers
-    ADD CONSTRAINT fk_vtuber_empresa FOREIGN KEY (empresa_id)
-        REFERENCES empresas(uid) ON DELETE CASCADE;
-
--- Chaves Estrangeiras para Tabela usuario_perfil
-ALTER TABLE usuario_perfil
-    ADD CONSTRAINT fk_usuario_perfil_usuario FOREIGN KEY (usuario_id)
-        REFERENCES usuarios(id) ON DELETE CASCADE;
-ALTER TABLE usuario_perfil
-    ADD CONSTRAINT fk_usuario_perfil_perfil FOREIGN KEY (perfil_id)
-        REFERENCES perfis(id) ON DELETE CASCADE;
-
--- Chaves Estrangeiras para Tabela usuario_vtuber_favoritos
-ALTER TABLE usuario_vtuber_favoritos
-    ADD CONSTRAINT fk_favoritos_usuario FOREIGN KEY (usuario_id)
-        REFERENCES usuarios(id) ON DELETE CASCADE;
--- Nota: fk_favoritos_vtuber não é mais necessária, pois vtuber_uid é apenas uma string ID.
-
-
--- ==========================================
--- 4. 👥 DML: INSERÇÃO DE DADOS
--- ==========================================
-
--- Inserindo perfis
-insert into perfis(nome) values ('ROLE_ADMIN');
-insert into perfis(nome) values ('ROLE_USER');
-
--- Inserindo usuários (senha: "123456" codificada em BCrypt)
-insert into usuarios(dtype, nome, sobrenome, email, senha, is_confirmado)
-values ('Usuario', 'Admin', 'do Sistema', 'admin@email.com', '$2a$10$944hSl4M26XD1d8gEa/KWuhIBuN5F0Bs/LSE7./ZDUFHfdzhgzd7q', true);
-
-insert into usuarios(dtype, nome, sobrenome, email, senha, is_confirmado)
-values ('Usuario', 'Usuario', 'do Sistema', 'user@email.com', '$2a$10$944hSl4M26XD1d8gEa/KWuhIBuN5F0Bs/LSE7./ZDUFHfdzhgzd7q', true);
-
--- Associando usuários aos perfis
-insert into usuario_perfil(usuario_id, perfil_id) values(1, 1);
-insert into usuario_perfil(usuario_id, perfil_id) values(2, 2);
-
--- Inserindo dados na tabela 'empresas'
-INSERT INTO empresas (uid, nome, info)
+-- 3. INSERINDO EMPRESAS (Tabela: empresas)
+INSERT INTO empresas (uid, nome, info, url_foto)
 VALUES
-    ('emp001', 'Empresa Exemplo 1', 'Informações sobre a Empresa Exemplo 1'),
-    ('emp002', 'Empresa Exemplo 2', 'Informações sobre a Empresa Exemplo 2'),
-    ('emp003', 'Empresa Exemplo 3', 'Informações sobre a Empresa Exemplo 3');
+    ('emp001', 'Hololive Production', 'Agência japonesa líder em Vtubers.', NULL);
 
--- Inserindo dados na tabela 'vtubers'
-INSERT INTO vtubers (uid, empresa_id, nome, info, media_notas, total_avaliacoes, soma_total_das_notas)
+-- 4. INSERINDO VTUBERS (Tabela: vtubers)
+INSERT INTO vtubers (uid, nome, empresa_id, info, url_foto, link_canal, video_youtube, media_notas, total_avaliacoes, soma_total_das_notas)
 VALUES
-    ('v001', 'emp001', 'Vtuber A', 'Info A', 4.5, 10, 45.0),
-    ('v002', 'emp001', 'Vtuber B', 'Info B', 3.8, 5, 19.0),
-    ('v003', 'emp002', 'Vtuber C', 'Info C', 5.0, 1, 5.0);
+    ('vt001', 'Houshou Marine', 'emp001', 'A capitã pirata mais preguiçosa.', 'url_marine', 'canal_marine', 'video_marine', 4.5, 2, 9.0);
+
+-- 5. INSERINDO NOTAS (Tabela: notas)
+INSERT INTO notas (uid, vtuber_id, valor, comentario, data_criacao, data_atualizacao)
+VALUES
+    ('nota001', 'vt001', 5, 'Melhor Vtuber! Senchou!', NOW(), NOW());
+
+-- 6. INSERINDO DADOS NAS TABELAS DE JUNÇÃO
+
+-- A. JUNÇÃO USUÁRIO X PERFIL (Tabela: usuario_perfil)
+-- usa admin001 -> ROLE_ADMIN, user001 -> ROLE_USER
+INSERT INTO usuario_perfil (usuario_id, perfil_id) VALUES ('admin001', 'ROLE_ADMIN');
+INSERT INTO usuario_perfil (usuario_id, perfil_id) VALUES ('user001', 'ROLE_USER');
+
+-- B. JUNÇÃO NOTA X USUÁRIO (Tabela: nota_usuarios)
+-- nota001 feita pelo admin001
+INSERT INTO nota_usuarios (nota_uid, usuario_id) VALUES ('nota001', 'admin001');
+
+-- C. JUNÇÃO USUÁRIO X VTUBER FAVORITOS (Tabela: usuario_favoritos)
+-- user001 favoritou vt001
+INSERT INTO usuario_favoritos (usuario_uid, vtuber_uid) VALUES ('user001', 'vt001');
+
+-- 7. INSERINDO PRODUTOS (Tabela: produtos)
+-- Assumindo que 'id' desta tabela é uma PK numérica simples, não String.
+INSERT INTO produtos (descricao, estoque, nome, situacao, valor_de_compra, valor_de_venda)
+VALUES
+    ('Caneca de café da Senchou', 50, 'Produto 1', 1, 15.00, 30.00);

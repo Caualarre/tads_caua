@@ -14,8 +14,8 @@ import java.util.List;
 @Setter
 public class Perfil implements GrantedAuthority {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id // PK é String e deve ser atribuída manualmente
+    private String uid; // ⚠️ Alterado de 'id' para 'uid' para consistência
 
     private String nome;
 
@@ -24,6 +24,6 @@ public class Perfil implements GrantedAuthority {
 
     @Override
     public String getAuthority() {
-        return nome;  // O nome do perfil é retornado como a autoridade
+        return nome;
     }
 }

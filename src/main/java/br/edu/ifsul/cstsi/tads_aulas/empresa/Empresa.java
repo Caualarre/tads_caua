@@ -8,22 +8,24 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(name = "Empresa")
+
+@Entity
 @Table(name = "empresas")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class Empresa {
+
     @Id
-    private String uid;
+    private String uid; // Pode continuar String
 
     private String nome;
     private String urlFoto;
-
     private String info;
 
-    @OneToMany(mappedBy = "empresa") //
+    @OneToMany(mappedBy = "empresa")
     private List<Vtuber> vtubers = new ArrayList<>();
 }
+
 
