@@ -1,35 +1,32 @@
 package br.edu.ifsul.cstsi.tads_aulas.autenticacao;
 
-import br.edu.ifsul.cstsi.tads_aulas.usuario.Usuario;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService; // ⬅️ Nova importação
+import org.springframework.security.core.userdetails.UsernameNotFoundException; // ⬅️ Nova importação
 import org.springframework.stereotype.Service;
 
 @Service
-public class AutenticacaoService {
+// ➡️ Implementa UserDetailsService
+public class AutenticacaoService implements UserDetailsService {
 
     private final AutenticacaoRepository rep;
-    private final BCryptPasswordEncoder passwordEncoder;
 
-    public AutenticacaoService(AutenticacaoRepository rep, BCryptPasswordEncoder passwordEncoder) {
+    // Não precisa mais do BCryptPasswordEncoder no construtor
+    public AutenticacaoService(AutenticacaoRepository rep) {
         this.rep = rep;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    // Autentica um usuário com base no email e senha
-    public Usuario autenticar(String email, String senha) {
-        // Encontra o usuário pelo e-mail
-        Usuario usuario = rep.findByEmail(email);
+    //  Implementação obrigatória do UserDetailsService
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Encontra o usuário pelo e-mail (username)
+        UserDetails usuario = rep.findByEmail(username);
 
         if (usuario == null) {
-            throw new IllegalArgumentException("Usuário não encontrado com o e-mail: " + email);
+            // Lança a exceção padrão que o Spring Security sabe tratar
+            throw new UsernameNotFoundException("Usuário não encontrado com o e-mail: " + username);
         }
 
-        // Verifica se a senha fornecida é válida comparando com a senha criptografada
-        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
-            throw new IllegalArgumentException("Senha inválida");
-        }
-
-        return usuario; // Retorna o usuário autenticado
+        return usuario; // Retorna o objeto Usuario (que implementa UserDetails)
     }
 }
-

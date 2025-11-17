@@ -20,8 +20,17 @@ public class Nota {
     @Id
     private String uid;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vtuberId", nullable = false, foreignKey = @ForeignKey(name = "fk_nota_vtuber"))
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "vtuber_id",
+            nullable = false,
+            foreignKey = @ForeignKey(
+                    name = "fk_nota_vtuber"
+            )
+    )
     private Vtuber vtuber;
 
     @ManyToMany

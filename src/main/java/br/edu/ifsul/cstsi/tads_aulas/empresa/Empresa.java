@@ -1,6 +1,7 @@
 package br.edu.ifsul.cstsi.tads_aulas.empresa;
 
 import br.edu.ifsul.cstsi.tads_aulas.vtuber.Vtuber;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Empresa {
 
     private String info;
 
-    @OneToMany(mappedBy = "empresa")
+    @OneToMany(mappedBy = "empresa") //
     private List<Vtuber> vtubers = new ArrayList<>();
 }
+
